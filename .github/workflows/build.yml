@@ -32,9 +32,16 @@ jobs:
           if [ "${{ inputs.enable_cpr }}" = "true" ]; then CPR_FLAG="--cpr"; fi
           ./build.sh --auto --version "${{ inputs.kernel_version }}" $CPR_FLAG
 
+      - name: Sanitize artifact name
+        id: safe_name
+        run: |
+          SAFE="${{ inputs.kernel_version }}"
+          SAFE="${SAFE//\//-}"
+          echo "value=$SAFE" >> "$GITHUB_OUTPUT"
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: openstick-kernel-${{ inputs.kernel_version }}
+          name: openstick-kernel-${{ steps.safe_name.outputs.value }}
           path: builds/*.apk
           if-no-files-found: error
