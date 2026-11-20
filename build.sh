@@ -22,13 +22,14 @@ REC_BRANCH="msm8916/6.12.1"
 CPR_PATCH_NAME="cpr-6.12.1.patch"
 
 # ANSI Colors
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
-YELLOW=$(tput setaf 3)
-BLUE=$(tput setaf 4)
-CYAN=$(tput setaf 6)
-BOLD=$(tput bold)
-RESET=$(tput sgr0)
+export TERM="${TERM:-dumb}"
+RED=$(tput setaf 1 2>/dev/null || echo "")
+GREEN=$(tput setaf 2 2>/dev/null || echo "")
+YELLOW=$(tput setaf 3 2>/dev/null || echo "")
+BLUE=$(tput setaf 4 2>/dev/null || echo "")
+CYAN=$(tput setaf 6 2>/dev/null || echo "")
+BOLD=$(tput bold 2>/dev/null || echo "")
+RESET=$(tput sgr0 2>/dev/null || echo "")
 
 # Enable aliases
 shopt -s expand_aliases
@@ -37,7 +38,8 @@ set -e
 # UI Functions
 
 cleanup_ui() {
-    tput cnorm; stty echo
+    tput cnorm 2>/dev/null || true
+    stty echo 2>/dev/null || true
 }
 trap cleanup_ui EXIT INT TERM
 
