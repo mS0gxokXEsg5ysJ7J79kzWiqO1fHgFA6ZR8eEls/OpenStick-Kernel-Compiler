@@ -12,6 +12,11 @@ on:
         required: true
         type: boolean
         default: true
+      clean_build:
+        description: '是否强制清理缓存从零编译'
+        required: false
+        type: boolean
+        default: false
       publish_prerelease:
         description: '是否推送到预览版 (Pre-release)'
         required: false
@@ -37,12 +42,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bash git curl python3 python3-venv
 
+      - name: Cache kernel build & tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            pmos-venv
+            pmbootstrap
+            pmos-work/cache_git
+            pmos-work/cache_apk_aarch64
+            pmos-work/cache_apk_x86_64
+            linux-msm8916
+          key: kernel-${{ inputs.kernel_version }}-cpr-${{ inputs.enable_cpr }}-${{ hashFiles('build.sh') }}
+          restore-keys: |
+            kernel-${{ inputs.kernel_version }}-cpr-${{ inputs.enable_cpr }}-
+
       - name: Run build script (non-interactive)
         run: |
           chmod +x ./build.sh
           CPR_FLAG="--no-cpr"
+          CLEAN_FLAG=""
           if [ "${{ inputs.enable_cpr }}" = "true" ]; then CPR_FLAG="--cpr"; fi
-          ./build.sh --auto --clean --version "${{ inputs.kernel_version }}" $CPR_FLAG
+          if [ "${{ inputs.clean_build }}" = "true" ]; then CLEAN_FLAG="--clean"; fi
+          ./build.sh --auto $CLEAN_FLAG --version "${{ inputs.kernel_version }}" $CPR_FLAG
           ls -lh builds/*.apk
 
       - name: Sanitize artifact name
