@@ -344,8 +344,9 @@ else
     git checkout "$KERNEL_VERSION" 2>/dev/null || (git fetch origin "$KERNEL_VERSION" --depth=1 && git checkout "$KERNEL_VERSION")
 fi
 cd "$KERNEL_SRC_DIR"
-curl -sSL "$DEFCONFIG_URL" -o "$SCRIPT_DIR/downloaded_defconfig_temp"
-#curl -sSL "$PMOS_CONFIG_URL" -o "$SCRIPT_DIR/pmos.config" # seems to break things but worked in initial testing will compile without it
+LOCAL_DEFCONFIG="$PMAPORTS_PATH/device/testing/linux-postmarketos-qcom-msm8916/config-postmarketos-qcom-msm8916.aarch64"
+if [ ! -s "$LOCAL_DEFCONFIG" ]; then log_err "Local defconfig not found: $LOCAL_DEFCONFIG"; fi
+cp -f "$LOCAL_DEFCONFIG" "$SCRIPT_DIR/downloaded_defconfig_temp"
 
 # Activate environment
 cd "$KERNEL_SRC_DIR"
@@ -471,6 +472,11 @@ log_info "Force-enabling IPsec/crypto options..."
     --enable DUMMY \
     --enable TUN
 make olddefconfig
+
+grep -q '^CONFIG_EXT4_FS=y' "$TARGET_CONFIG" || log_err "CONFIG_EXT4_FS missing in .config!"
+grep -q '^CONFIG_MMC=y' "$TARGET_CONFIG" || log_err "CONFIG_MMC missing in .config!"
+grep -q '^CONFIG_XFRM=y' "$TARGET_CONFIG" || log_err "CONFIG_XFRM missing in .config!"
+grep -q '^CONFIG_INET_ESP=y' "$TARGET_CONFIG" || log_err "CONFIG_INET_ESP missing in .config!"
 
 log_info "Compiling (Jobs: $(nproc))..."
 make -j$(nproc) Image.gz dtbs modules
