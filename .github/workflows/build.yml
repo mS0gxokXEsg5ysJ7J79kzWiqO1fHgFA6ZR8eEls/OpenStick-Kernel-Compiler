@@ -1,0 +1,40 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernel_version:
+        description: '内核分支 (例如 msm8916/6.12.1)'
+        required: true
+        default: 'msm8916/6.12.1'
+      enable_cpr:
+        description: '是否启用 CPR 补丁'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bash git curl python3 python3-venv
+
+      - name: Run build script (non-interactive)
+        run: |
+          chmod +x ./build.sh
+          CPR_FLAG="--no-cpr"
+          if [ "${{ inputs.enable_cpr }}" = "true" ]; then CPR_FLAG="--cpr"; fi
+          ./build.sh --auto --version "${{ inputs.kernel_version }}" $CPR_FLAG
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openstick-kernel-${{ inputs.kernel_version }}
+          path: builds/*.apk
+          if-no-files-found: error
