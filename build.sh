@@ -498,6 +498,14 @@ pmbootstrap -w "$PMOS_WORKDIR" -p "$PMAPORTS_PATH" checksum linux-postmarketos-q
 log_info "Packaging..."
 pmbootstrap -w "$PMOS_WORKDIR" -p "$PMAPORTS_PATH" -y build --envkernel linux-postmarketos-qcom-msm8916
 
+log_info "=== DEBUG: searching for vmlinuz in workdir ==="
+find "$PMOS_WORKDIR" -iname "vmlinuz*" 2>/dev/null
+log_info "=== DEBUG: searching for initramfs in workdir ==="
+find "$PMOS_WORKDIR" -iname "initramfs*" 2>/dev/null
+log_info "=== DEBUG: listing chroot-like directories ==="
+find "$PMOS_WORKDIR" -maxdepth 3 -type d -iname "*chroot*" 2>/dev/null
+log_info "=== DEBUG: done ==="
+
 deactivate
 
 # Finalize and cleanup
