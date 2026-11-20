@@ -30,7 +30,8 @@ jobs:
           chmod +x ./build.sh
           CPR_FLAG="--no-cpr"
           if [ "${{ inputs.enable_cpr }}" = "true" ]; then CPR_FLAG="--cpr"; fi
-          ./build.sh --auto --version "${{ inputs.kernel_version }}" $CPR_FLAG
+          ./build.sh --auto --clean --version "${{ inputs.kernel_version }}" $CPR_FLAG
+          ls -lh builds/*.apk
 
       - name: Sanitize artifact name
         id: safe_name
