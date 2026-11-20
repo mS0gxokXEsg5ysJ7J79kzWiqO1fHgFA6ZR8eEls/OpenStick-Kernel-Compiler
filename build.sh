@@ -454,6 +454,16 @@ else
     make olddefconfig
 fi
 
+log_info "Force-enabling IPsec/crypto options..."
+./scripts/config --file "$TARGET_CONFIG" \
+    --enable XFRM_USER \
+    --enable INET_ESP \
+    --enable INET6_ESP \
+    --enable CRYPTO_AES \
+    --enable CRYPTO_SHA1 \
+    --enable CRYPTO_HMAC
+make olddefconfig
+
 log_info "Compiling (Jobs: $(nproc))..."
 make -j$(nproc) Image.gz dtbs modules
 
