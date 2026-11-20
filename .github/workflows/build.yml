@@ -12,10 +12,22 @@ on:
         required: true
         type: boolean
         default: false
+      publish_prerelease:
+        description: '是否推送到预览版 (Pre-release)'
+        required: false
+        type: boolean
+        default: false
+      publish_release:
+        description: '是否推送到发行版 (Release)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -46,3 +58,21 @@ jobs:
           name: openstick-kernel-${{ steps.safe_name.outputs.value }}
           path: builds/*.apk
           if-no-files-found: error
+
+      - name: Publish Pre-release
+        if: ${{ inputs.publish_prerelease }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: prerelease-${{ steps.safe_name.outputs.value }}-${{ github.run_number }}
+          name: Pre-release ${{ inputs.kernel_version }} (#${{ github.run_number }})
+          prerelease: true
+          files: builds/*.apk
+
+      - name: Publish Release
+        if: ${{ inputs.publish_release }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release-${{ steps.safe_name.outputs.value }}-${{ github.run_number }}
+          name: Release ${{ inputs.kernel_version }} (#${{ github.run_number }})
+          prerelease: false
+          files: builds/*.apk
