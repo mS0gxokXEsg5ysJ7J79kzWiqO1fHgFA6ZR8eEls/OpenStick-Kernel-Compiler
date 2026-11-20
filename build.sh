@@ -456,12 +456,18 @@ fi
 
 log_info "Force-enabling IPsec/crypto options..."
 ./scripts/config --file "$TARGET_CONFIG" \
+    --enable XFRM \
     --enable XFRM_USER \
+    --enable XFRM_STATISTICS \
     --enable INET_ESP \
     --enable INET6_ESP \
     --enable CRYPTO_AES \
+    --enable CRYPTO_CBC \
+    --enable CRYPTO_HMAC \
     --enable CRYPTO_SHA1 \
-    --enable CRYPTO_HMAC
+    --enable CRYPTO_SHA256 \
+    --enable DUMMY \
+    --enable TUN
 make olddefconfig
 
 log_info "Compiling (Jobs: $(nproc))..."
