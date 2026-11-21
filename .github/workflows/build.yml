@@ -1,4 +1,4 @@
-name: Build OpenStick Kernel
+name: Build Kernel
 run-name: Build OpenStick Kernel ${{ inputs.kernel_version }} (CPR:${{ inputs.enable_cpr }} XFRM:${{ inputs.enable_xfrm }} #${{ github.run_number }})
 
 on:
