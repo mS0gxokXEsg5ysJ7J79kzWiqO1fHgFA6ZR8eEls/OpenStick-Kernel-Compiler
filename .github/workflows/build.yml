@@ -1,5 +1,5 @@
 name: Build Kernel
-run-name: Build OpenStick Kernel ${{ inputs.kernel_version }} (CPR:${{ inputs.enable_cpr }} XFRM:${{ inputs.enable_xfrm }} #${{ github.run_number }})
+run-name: Build Kernel ${{ inputs.kernel_version }} (CPR:${{ inputs.enable_cpr }} XFRM:${{ inputs.enable_xfrm }} #${{ github.run_number }})
 
 on:
   workflow_dispatch:
