@@ -80,6 +80,8 @@ jobs:
           SAFE="${{ inputs.kernel_version }}"
           SAFE="${SAFE//\//-}"
           echo "value=$SAFE" >> "$GITHUB_OUTPUT"
+          echo "tag_time=$(TZ='Asia/Shanghai' date +'%Y-%m-%d_%H-%M-%S')" >> "$GITHUB_OUTPUT"
+          echo "title_time=$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -92,8 +94,8 @@ jobs:
         if: ${{ inputs.publish_prerelease }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: prerelease-${{ steps.safe_name.outputs.value }}-${{ github.run_number }}
-          name: Pre-release ${{ inputs.kernel_version }} (#${{ github.run_number }})
+          tag_name: Pre-Release-${{ steps.safe_name.outputs.value }}-${{ github.run_number }}_${{ steps.safe_name.outputs.tag_time }}
+          name: Pre-Release ${{ steps.safe_name.outputs.value }} (#${{ github.run_number }}) ${{ steps.safe_name.outputs.title_time }}
           prerelease: true
           files: builds/*.apk
 
@@ -101,7 +103,7 @@ jobs:
         if: ${{ inputs.publish_release }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: release-${{ steps.safe_name.outputs.value }}-${{ github.run_number }}
-          name: Release ${{ inputs.kernel_version }} (#${{ github.run_number }})
+          tag_name: Release-${{ steps.safe_name.outputs.value }}-${{ github.run_number }}_${{ steps.safe_name.outputs.tag_time }}
+          name: Release ${{ steps.safe_name.outputs.value }} (#${{ github.run_number }}) ${{ steps.safe_name.outputs.title_time }}
           prerelease: false
           files: builds/*.apk
