@@ -24,9 +24,9 @@ on:
         default: false
       publish_prerelease:
         description: '是否推送到预览版 (Pre-release)'
-        required: false
+        required: true
         type: boolean
-        default: false
+        default: true
       publish_release:
         description: '是否推送到发行版 (Release)'
         required: false
