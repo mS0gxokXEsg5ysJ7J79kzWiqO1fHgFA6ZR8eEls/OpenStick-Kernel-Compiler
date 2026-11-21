@@ -12,6 +12,11 @@ on:
         required: true
         type: boolean
         default: true
+      enable_xfrm:
+        description: '是否启用 XFRM/IPsec 支持'
+        required: true
+        type: boolean
+        default: true
       clean_build:
         description: '是否强制清理缓存从零编译'
         required: false
@@ -52,18 +57,20 @@ jobs:
             pmos-work/cache_apk_aarch64
             pmos-work/cache_apk_x86_64
             linux-msm8916
-          key: kernel-${{ inputs.kernel_version }}-cpr-${{ inputs.enable_cpr }}-${{ hashFiles('build.sh') }}
+          key: kernel-${{ inputs.kernel_version }}-cpr-${{ inputs.enable_cpr }}-xfrm-${{ inputs.enable_xfrm }}-${{ hashFiles('build.sh') }}
           restore-keys: |
-            kernel-${{ inputs.kernel_version }}-cpr-${{ inputs.enable_cpr }}-
+            kernel-${{ inputs.kernel_version }}-cpr-${{ inputs.enable_cpr }}-xfrm-${{ inputs.enable_xfrm }}-
 
       - name: Run build script (non-interactive)
         run: |
           chmod +x ./build.sh
           CPR_FLAG="--no-cpr"
+          XFRM_FLAG="--no-xfrm"
           CLEAN_FLAG=""
           if [ "${{ inputs.enable_cpr }}" = "true" ]; then CPR_FLAG="--cpr"; fi
+          if [ "${{ inputs.enable_xfrm }}" = "true" ]; then XFRM_FLAG="--xfrm"; fi
           if [ "${{ inputs.clean_build }}" = "true" ]; then CLEAN_FLAG="--clean"; fi
-          ./build.sh --auto $CLEAN_FLAG --version "${{ inputs.kernel_version }}" $CPR_FLAG
+          ./build.sh --auto $CLEAN_FLAG --version "${{ inputs.kernel_version }}" $CPR_FLAG $XFRM_FLAG
           ls -lh builds/*.apk
 
       - name: Sanitize artifact name
