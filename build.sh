@@ -165,7 +165,8 @@ log_err()  { echo -e "${RED}[ERR]${RESET} $1"; exit 1; }
 INTERACTIVE=true
 FORCE_CLEAN=false
 KERNEL_VERSION="$REC_BRANCH"
-ENABLE_CPR=false 
+ENABLE_CPR=false
+ENABLE_XFRM=true
 SAVE_CONFIG=false
 declare -a CHOSEN_USER_PATCHES
 USER_SPECIFIED_FLAGS=false
@@ -179,6 +180,8 @@ while [[ "$#" -gt 0 ]]; do
         --version) KERNEL_VERSION="$2"; shift; USER_SPECIFIED_FLAGS=true ;;
         --cpr) ENABLE_CPR=true; USER_SPECIFIED_FLAGS=true ;;
         --no-cpr) ENABLE_CPR=false; USER_SPECIFIED_FLAGS=true ;;
+        --xfrm) ENABLE_XFRM=true; USER_SPECIFIED_FLAGS=true ;;
+        --no-xfrm) ENABLE_XFRM=false; USER_SPECIFIED_FLAGS=true ;;
         --save) SAVE_CONFIG=true; USER_SPECIFIED_FLAGS=true ;;
         *) log_warn "Unknown: $1" ;;
     esac
@@ -286,6 +289,7 @@ fi
 if [ "$SAVE_CONFIG" = true ]; then
     echo "KERNEL_VERSION=\"$KERNEL_VERSION\"" > "$CONFIG_FILE"
     echo "ENABLE_CPR=$ENABLE_CPR" >> "$CONFIG_FILE"
+    echo "ENABLE_XFRM=$ENABLE_XFRM" >> "$CONFIG_FILE"
 fi
 
 
@@ -457,21 +461,27 @@ else
     make olddefconfig
 fi
 
-log_info "Force-enabling IPsec/crypto options..."
-./scripts/config --file "$TARGET_CONFIG" \
-    --enable XFRM \
-    --enable XFRM_USER \
-    --enable XFRM_STATISTICS \
-    --enable INET_ESP \
-    --enable INET6_ESP \
-    --enable CRYPTO_AES \
-    --enable CRYPTO_CBC \
-    --enable CRYPTO_HMAC \
-    --enable CRYPTO_SHA1 \
-    --enable CRYPTO_SHA256 \
-    --enable DUMMY \
-    --enable TUN
-make olddefconfig
+if [ "$ENABLE_XFRM" = true ]; then
+    log_info "Force-enabling IPsec/XFRM/crypto options..."
+    ./scripts/config --file "$TARGET_CONFIG" \
+        --enable XFRM \
+        --enable XFRM_USER \
+        --enable XFRM_STATISTICS \
+        --enable INET_ESP \
+        --enable INET6_ESP \
+        --enable CRYPTO_AES \
+        --enable CRYPTO_CBC \
+        --enable CRYPTO_HMAC \
+        --enable CRYPTO_SHA1 \
+        --enable CRYPTO_SHA256 \
+        --enable DUMMY \
+        --enable TUN
+    make olddefconfig
+    grep -q '^CONFIG_XFRM=y' "$TARGET_CONFIG" || log_err "CONFIG_XFRM missing in .config!"
+    grep -q '^CONFIG_INET_ESP=y' "$TARGET_CONFIG" || log_err "CONFIG_INET_ESP missing in .config!"
+else
+    log_info "XFRM/IPsec force-enable skipped (--no-xfrm)."
+fi
 
 grep -q '^CONFIG_EXT4_FS=y' "$TARGET_CONFIG" || log_err "CONFIG_EXT4_FS missing in .config!"
 grep -q '^CONFIG_MMC=y' "$TARGET_CONFIG" || log_err "CONFIG_MMC missing in .config!"
