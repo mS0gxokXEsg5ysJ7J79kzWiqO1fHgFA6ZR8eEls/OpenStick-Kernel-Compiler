@@ -1,5 +1,5 @@
 name: Build Kernel
-run-name: Build Kernel #${{ github.run_number }} (CPR:${{ inputs.enable_cpr }} XFRM:${{ inputs.enable_xfrm }})
+run-name: "Build Kernel #${{ github.run_number }} (CPR:${{ inputs.enable_cpr }} XFRM:${{ inputs.enable_xfrm }})"
 
 on:
   workflow_dispatch:
