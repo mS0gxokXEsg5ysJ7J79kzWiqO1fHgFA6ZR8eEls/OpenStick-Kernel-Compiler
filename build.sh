@@ -528,12 +528,13 @@ GENERATED_APK=$(find "$PMOS_WORKDIR/packages/edge/aarch64" -name "linux-postmark
 if [ -f "$GENERATED_APK" ]; then
     BASE_NAME="linux-postmarketos-qcom-msm8916"
     EXTRA=""
-    [ "$ENABLE_CPR" = true ] && EXTRA="-cpr"
+    [ "$ENABLE_CPR" = true ] && EXTRA="${EXTRA}-cpr"
+    [ "$ENABLE_XFRM" = true ] && EXTRA="${EXTRA}-xfrm"
     
     # Clean version string for filename
     FINAL_VER=$(echo "$KERNEL_VERSION" | sed 's|.*/||; s|^v||')
     
-    TARGET_NAME="${BASE_NAME}${EXTRA}-${FINAL_VER}.apk"
+    TARGET_NAME="${BASE_NAME}-${FINAL_VER}${EXTRA}.apk"
     
     cp "$GENERATED_APK" "$BUILDS_DIR/$TARGET_NAME"
     
