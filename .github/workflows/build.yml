@@ -1,5 +1,5 @@
-name: Build Kernel
-run-name: "Build Kernel #${{ github.run_number }} (CPR:${{ inputs.enable_cpr }} XFRM:${{ inputs.enable_xfrm }})"
+name: Build OpenStick Kernel
+run-name: "Build OpenStick Kernel #${{ github.run_number }} (CPR:${{ inputs.enable_cpr }} XFRM:${{ inputs.enable_xfrm }})"
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ on:
         type: boolean
         default: false
       publish_prerelease:
-        description: '是否推送到预览版 (Pre-release)'
+        description: '是否推送到预览版 (Pre-Release)'
         required: true
         type: boolean
         default: true
@@ -80,15 +80,34 @@ jobs:
           SAFE="${{ inputs.kernel_version }}"
           SAFE="${SAFE//\//-}"
           KVER=$(echo "${{ inputs.kernel_version }}" | sed 's|.*/||; s|^v||')
+          TAG_TIME=$(TZ='Asia/Shanghai' date +'%y%m%d-%H%M%S')
+          TITLE_TIME=$(TZ='Asia/Shanghai' date +'%y-%m-%d %H:%M:%S')
+
+          # 动态拼接功能后缀（不勾选则不显示）
+          EXTRA=""
+          if [ "${{ inputs.enable_cpr }}" = "true" ]; then EXTRA="${EXTRA}-cpr"; fi
+          if [ "${{ inputs.enable_xfrm }}" = "true" ]; then EXTRA="${EXTRA}-xfrm"; fi
+
+          # ✅ 最终输出文件名
+          FINAL_APK="linux-postmarketos-qcom-msm8916-${KVER}${EXTRA}.apk"
+
+          SRC_APK=$(ls builds/*.apk | head -n 1)
+          if [ -f "$SRC_APK" ] && [ "$(basename "$SRC_APK")" != "$FINAL_APK" ]; then
+            mv -f "$SRC_APK" "builds/$FINAL_APK"
+          fi
+          ls -lh builds/*.apk
+
           echo "value=$SAFE" >> "$GITHUB_OUTPUT"
           echo "kver=$KVER" >> "$GITHUB_OUTPUT"
-          echo "tag_time=$(TZ='Asia/Shanghai' date +'%y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
-          echo "title_time=$(TZ='Asia/Shanghai' date +'%y-%m-%d %H:%M:%S')" >> "$GITHUB_OUTPUT"
+          echo "tag_time=$TAG_TIME" >> "$GITHUB_OUTPUT"
+          echo "title_time=$TITLE_TIME" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
+          # 【Artifact 文件名】Actions 页面下载的压缩包名称
           name: openstick-kernel-${{ steps.safe_name.outputs.value }}
+          # 【实际 APK 文件名】由 build.sh 生成（如 linux-postmarketos-qcom-msm8916-6.12.1-cpr-xfrm.apk）
           path: builds/*.apk
           if-no-files-found: error
 
@@ -96,16 +115,22 @@ jobs:
         if: ${{ inputs.publish_prerelease }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "MSM8916-${{ steps.safe_name.outputs.kver }}_${{ steps.safe_name.outputs.tag_time }}_p${{ github.run_number }}"
-          name: "[Pre-Release] MSM8916 ${{ steps.safe_name.outputs.kver }} ${{ steps.safe_name.outputs.title_time }} (#${{ github.run_number }})"
+          # 【Tag 标签】预览版 Git Tag（禁止空格与冒号）
+          tag_name: "OpenStick-Kernel-msm8916-${{ steps.safe_name.outputs.kver }}-p${{ github.run_number }}"
+          # 【页面标题】预览版 Release 顶部显示的大标题
+          name: "OpenStick Kernel msm8916 ${{ steps.safe_name.outputs.kver }} Pre-release: ${{ github.run_number }} (${{ steps.safe_name.outputs.title_time }})"
           prerelease: true
+          # 【附件文件名】上传到 Release 页面的 .apk 文件（文件名由上面的 FINAL_APK 决定）
           files: builds/*.apk
 
       - name: Publish Release
         if: ${{ inputs.publish_release }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "MSM8916-${{ steps.safe_name.outputs.kver }}_${{ steps.safe_name.outputs.tag_time }}_r${{ github.run_number }}"
-          name: "MSM8916 ${{ steps.safe_name.outputs.kver }} ${{ steps.safe_name.outputs.title_time }} (#${{ github.run_number }})"
+          # 【Tag 标签】正式版 Git Tag（禁止空格与冒号）
+          tag_name: "OpenStick-Kernel-msm8916-${{ steps.safe_name.outputs.kver }}-r${{ github.run_number }}"
+          # 【页面标题】正式版 Release 顶部显示的大标题（已顺手将误写的 Pre-release 改为 Release）
+          name: "OpenStick Kernel msm8916 ${{ steps.safe_name.outputs.kver }} Release: ${{ github.run_number }} (${{ steps.safe_name.outputs.title_time }})"
           prerelease: false
+          # 【附件文件名】上传到 Release 页面的 .apk 文件（文件名由上面的 FINAL_APK 决定）
           files: builds/*.apk
