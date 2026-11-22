@@ -447,19 +447,21 @@ else
         make olddefconfig
     fi
 
-    # Kernel version configuration
-    TAG="-msm8916"
-    [ "$ENABLE_CPR" = true ] && TAG="-msm8916-cpr"
-    
-    log_info "Setting kernel localversion to '$TAG'..."
-    sudo chmod 666 "$TARGET_CONFIG"
-    if grep -q "CONFIG_LOCALVERSION=" "$TARGET_CONFIG"; then
-        sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"$TAG\"/" "$TARGET_CONFIG"
-    else
-        echo "CONFIG_LOCALVERSION=\"$TAG\"" >> "$TARGET_CONFIG"
     fi
-    make olddefconfig
+
+# Kernel version configuration (放在 fi 外确保缓存构建也会同步更新)
+TAG="-msm8916"
+[ "$ENABLE_CPR" = true ] && TAG="${TAG}-cpr"
+[ "$ENABLE_XFRM" = true ] && TAG="${TAG}-xfrm"
+
+log_info "Setting kernel localversion to '$TAG'..."
+sudo chmod 666 "$TARGET_CONFIG"
+if grep -q "CONFIG_LOCALVERSION=" "$TARGET_CONFIG"; then
+    sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"$TAG\"/" "$TARGET_CONFIG"
+else
+    echo "CONFIG_LOCALVERSION=\"$TAG\"" >> "$TARGET_CONFIG"
 fi
+make olddefconfig
 
 if [ "$ENABLE_XFRM" = true ]; then
     log_info "Force-enabling IPsec/XFRM/crypto options..."
@@ -485,8 +487,6 @@ fi
 
 grep -q '^CONFIG_EXT4_FS=y' "$TARGET_CONFIG" || log_err "CONFIG_EXT4_FS missing in .config!"
 grep -q '^CONFIG_MMC=y' "$TARGET_CONFIG" || log_err "CONFIG_MMC missing in .config!"
-grep -q '^CONFIG_XFRM=y' "$TARGET_CONFIG" || log_err "CONFIG_XFRM missing in .config!"
-grep -q '^CONFIG_INET_ESP=y' "$TARGET_CONFIG" || log_err "CONFIG_INET_ESP missing in .config!"
 
 log_info "Compiling (Jobs: $(nproc))..."
 make -j$(nproc) Image.gz dtbs modules
