@@ -362,7 +362,7 @@ source "$ENVKERNEL" --gcc
 # Apply patches
 cd "$KERNEL_SRC_DIR"
 git checkout . >/dev/null 2>&1
-git clean -fd >/dev/null 2>&1
+git clean -fd -e .output >/dev/null 2>&1
 
 # CPR Patch
 CPR_FILE="$PATCHES_DIR/$CPR_PATCH_NAME"
