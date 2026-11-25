@@ -1,4 +1,5 @@
 #!/bin/bash
+# OpenStick-Kernel-Compiler/build.sh
 # Kernel Builder for OpenStick/postmarketOS
 
 # Configuration and Constants
@@ -466,24 +467,40 @@ make olddefconfig
 if [ "$ENABLE_XFRM" = true ]; then
     log_info "Force-enabling IPsec/XFRM/crypto options..."
     ./scripts/config --file "$TARGET_CONFIG" \
+        --enable TUN \
         --enable XFRM \
-        --enable XFRM_USER \
-        --enable XFRM_STATISTICS \
+        --enable DUMMY \
         --enable INET_ESP \
+        --enable XFRM_USER \
         --enable INET6_ESP \
         --enable CRYPTO_AES \
         --enable CRYPTO_CBC \
         --enable CRYPTO_HMAC \
         --enable CRYPTO_SHA1 \
         --enable CRYPTO_SHA256 \
-        --enable DUMMY \
-        --enable TUN
+        --enable XFRM_STATISTICS
     make olddefconfig
     grep -q '^CONFIG_XFRM=y' "$TARGET_CONFIG" || log_err "CONFIG_XFRM missing in .config!"
     grep -q '^CONFIG_INET_ESP=y' "$TARGET_CONFIG" || log_err "CONFIG_INET_ESP missing in .config!"
 else
     log_info "XFRM/IPsec force-enable skipped (--no-xfrm)."
 fi
+
+# 强制开启网络加速（BBR/FQ/TPROXY）、LED 触发器内置与网桥内置
+log_info "正在写入网络加速（BBR/FQ/TPROXY）、LED 触发器及网桥内置参数..."
+./scripts/config --file "$TARGET_CONFIG" \
+    --enable BRIDGE \
+    --enable NET_SCH_FQ \
+    --enable NFT_TPROXY \
+    --enable DEFAULT_BBR \
+    --enable TCP_CONG_BBR \
+    --enable NET_SCH_FQ_CODEL \
+    --enable TCP_CONG_ADVANCED \
+    --enable LEDS_TRIGGER_TIMER \
+    --enable LEDS_TRIGGER_NETDEV
+make olddefconfig
+grep -q '^CONFIG_TCP_CONG_BBR=y' "$TARGET_CONFIG" || log_err "CONFIG_TCP_CONG_BBR 未成功写入 .config!"
+grep -q '^CONFIG_BRIDGE=y' "$TARGET_CONFIG" || log_err "CONFIG_BRIDGE 未成功写入 .config!"
 
 grep -q '^CONFIG_EXT4_FS=y' "$TARGET_CONFIG" || log_err "CONFIG_EXT4_FS missing in .config!"
 grep -q '^CONFIG_MMC=y' "$TARGET_CONFIG" || log_err "CONFIG_MMC missing in .config!"
