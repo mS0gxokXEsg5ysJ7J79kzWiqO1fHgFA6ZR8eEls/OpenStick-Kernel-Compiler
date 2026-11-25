@@ -489,6 +489,7 @@ fi
 # 强制开启网络加速（BBR/FQ/TPROXY）、LED 触发器内置与网桥内置
 log_info "正在写入网络加速（BBR/FQ/TPROXY）、LED 触发器及网桥内置参数..."
 ./scripts/config --file "$TARGET_CONFIG" \
+    --enable IPV6 \
     --enable BRIDGE \
     --enable NET_SCH_FQ \
     --enable NFT_TPROXY \
